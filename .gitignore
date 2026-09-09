@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+
+venv/
+.venv/
+
+*.pt
+*.pth
+*.ckpt
+
+DATASETS/
+logs/
+JEPA_models_pt/
+results_json/

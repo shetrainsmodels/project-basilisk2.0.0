@@ -61,8 +61,14 @@ def save_json(dataset, fold, seed, seed_result, out_dir = "results_json") -> Non
         }
     # add seed results into the dict
     json_info["runs"][f"seed_{seed}"] = seed_result
-    with open(json_path, "w") as f:
+    # atomic save: write a temp file in the same folder, then rename over the old one. If the job is killed mid-write
+    # (timeout, preemption) the previous file stays intact instead of being truncated and losing every saved probe.
+    tmp_path = f"{json_path}.tmp"
+    with open(tmp_path, "w") as f:
         json.dump(json_info, f, indent = 4)
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(tmp_path, json_path)
     
             
         

@@ -1,6 +1,8 @@
 #!/bin/bash
 
 set -euo pipefail
+cd "$(dirname "$(readlink -f "$0")")"   
+mkdir -p logs                              
 
 # Usage:  ./launch_pretrain_downstream_V1.sh <DATASET> [LAM ...]
 #   DATASET = OPP (folds 1-4), PAM (folds 1-8), RW (folds 1-15) or RD (folds 1-17)

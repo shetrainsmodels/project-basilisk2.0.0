@@ -41,6 +41,8 @@ parser.add_argument("--fold", type = int, required = True)
 parser.add_argument("--lam", type = float, required = True)
 parser.add_argument("--w_per_class", type = str, default = "all")
 args = parser.parse_args()
+if args.w_per_class != "all" and not (args.w_per_class.isdigit() and int(args.w_per_class) > 0):
+    parser.error(f"--w_per_class must be all or a positive integer, got {args.w_per_class!r}")
 ENCODER_SEEDS = [42, 58, 7, 128, 92]      # pretraining seeds = which checkpoint is loaded
 PROBE_SEEDS   = [11, 22, 33]      # linear-head seeds: init + batch order. Every encoder x every probe seed
 DATA_SEED     = 2026                      # label subsample: identical for every encoder / objective / depth

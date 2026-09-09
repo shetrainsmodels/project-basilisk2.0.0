@@ -337,13 +337,15 @@ def interpolation_pam(dataframe: pd.DataFrame, max_gap: int = 30) -> pd.DataFram
         lo, hi = start - 1, end + 1
         if lo < 0 or hi >= n_rows:                       # chunk touches the frame edge: no valid neighbour on one side
             continue
-        if labels[lo] != labels[hi]:                     # label boundary
+        # The NaN rows still carry their own label / subject / timestamp, so check EVERY row of [lo, hi], not only the
+        # two neighbours: matching endpoints can hide an activity change, a subject change or a clock restart inside the chunk.
+        if np.any(labels[lo: hi + 1] != labels[lo]):                          # label boundary anywhere in the chunk
             continue
-        if groups is not None and groups[lo] != groups[hi]:   # subject boundary
+        if groups is not None and np.any(groups[lo: hi + 1] != groups[lo]):   # subject boundary anywhere in the chunk
             continue
         if period is not None:
-            dt = ts[hi] - ts[lo]
-            if dt <= 0 or dt > (seg_len + 1 + 5) * period:    # timestamp jump / restart: different recording
+            steps = np.diff(ts[lo: hi + 1])
+            if np.any(steps <= 0) or np.any(steps > 1.5 * period):            # restart or gap: same contiguity rule as resample_pam
                 continue
         rows = df.index[lo: hi + 1]
         interp = df.loc[rows, sensor_cols].interpolate(method="linear", axis=0, limit_area="inside")

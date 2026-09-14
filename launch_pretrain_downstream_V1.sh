@@ -15,6 +15,9 @@ if [ -z "${1:-}" ]; then
 fi
 DATASET=$1
 shift
+NL=$(grep -oE "n_layer: int = [0-9]+" MambaSSL_JEPA_Model.py | grep -oE "[0-9]+$")   # depth from HARMambaConfig default -> job names match RUN folders (e.g. PAM_L24_lam0)
+[ -n "$NL" ] || { echo "could not read n_layer from MambaSSL_JEPA_Model.py"; exit 1; }
+echo "n_layer = $NL (from MambaSSL_JEPA_Model.py)"
 LAMS=${@:-0 0.1 0.3 0.5 1}
 
 case "$DATASET" in
@@ -29,11 +32,11 @@ for LAM in $LAMS; do
     for FOLD in $FOLDS; do
         echo "Submitting pretraining for ${DATASET} lam ${LAM} fold ${FOLD}"
 
-        PRE_ID=$(sbatch --parsable --job-name=pre_${DATASET}_lam${LAM}_f${FOLD} pretrain_basilisk.slurm "$DATASET" "$FOLD" "$LAM")
+        PRE_ID=$(sbatch --parsable --job-name=pre_${DATASET}_L${NL}_lam${LAM}_f${FOLD} pretrain_basilisk.slurm "$DATASET" "$FOLD" "$LAM")
         echo "Pretraining job for ${DATASET} lam ${LAM} fold ${FOLD}: ${PRE_ID}"
         echo "Submitting downstream dependent on ${PRE_ID}"
 
-        DOWN_ID=$(sbatch --parsable --job-name=down_${DATASET}_lam${LAM}_f${FOLD} --dependency=afterok:${PRE_ID} train_downstream_basilisk.slurm "$DATASET" "$FOLD" "$LAM")
+        DOWN_ID=$(sbatch --parsable --job-name=down_${DATASET}_L${NL}_lam${LAM}_f${FOLD} --dependency=afterok:${PRE_ID} train_downstream_basilisk.slurm "$DATASET" "$FOLD" "$LAM")
         echo "Downstream job ID for ${DATASET} lam ${LAM} fold ${FOLD}: ${DOWN_ID}"
     done
 done

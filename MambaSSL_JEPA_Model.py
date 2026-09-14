@@ -56,7 +56,7 @@ class HARMambaConfig:
     d_model: int = 384
     num_sensor_features: int = 45
     d_intermediate: int = 512
-    n_layer: int = 24 # Testing with : 8, 12, 16, 24 
+    n_layer: int = 24 # Testing with : 8, 12, 16, 24, 32 
     n_tokens: int = 18
     ssm_cfg: dict = field(default_factory=lambda: {"expand": 4, "layer": "Mamba2", "headdim": 8, "d_ssm": 768, "dt_min": 0.001, "dt_max": 0.1,})
     rms_norm: bool = True

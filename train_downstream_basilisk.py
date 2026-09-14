@@ -46,7 +46,7 @@ if args.w_per_class != "all" and not (args.w_per_class.isdigit() and int(args.w_
 ENCODER_SEEDS = [42, 58, 7, 128, 92]      # pretraining seeds = which checkpoint is loaded
 PROBE_SEEDS   = [11, 22, 33]      # linear-head seeds: init + batch order. Every encoder x every probe seed
 DATA_SEED     = 2026                      # label subsample: identical for every encoder / objective / depth
-RUN = f"{args.dataset}_lam{args.lam:g}"                                     # pretrained-encoder folder (dataset-prefixed, shared by all label fractions)
+RUN = f"{args.dataset}_L{HARMambaConfig.n_layer}_lam{args.lam:g}"                     # pretrained-encoder folder: dataset + depth (from HARMambaConfig default) + lam, shared by all label fractions
 OUT = RUN if args.w_per_class == "all" else f"{RUN}_n{int(args.w_per_class)}"   # output tag: results/logs/probe .pt
 os.makedirs(f"JEPA_models_pt/{OUT}", exist_ok = True)
 os.makedirs("logs", exist_ok = True)

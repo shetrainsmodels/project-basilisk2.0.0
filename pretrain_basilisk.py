@@ -40,7 +40,7 @@ parser.add_argument("--dataset", type = str, required = True)
 parser.add_argument("--fold", type = int, required = True)
 parser.add_argument("--lam", type = float, required = True)
 args = parser.parse_args()
-RUN = f"{args.dataset}_lam{args.lam:g}"     # dataset-prefixed: OPP_lam0.1 / PAM_lam0.1 / RW_lam0.1 / RD_lam0.1 (never overwrite each other)
+RUN = f"{args.dataset}_L{HARMambaConfig.n_layer}_lam{args.lam:g}"     # dataset + depth prefixed: OPP_L24_lam0.1 / PAM_L16_lam0 / RD_L24_lam0 (depth read from HARMambaConfig default, never overwrite each other)
 os.makedirs(f"JEPA_models_pt/{RUN}", exist_ok = True)
 os.makedirs("logs", exist_ok = True)
 if args.dataset == "OPP":
@@ -69,7 +69,7 @@ elif args.dataset == "PAM":
     num_heads = 6
 
 elif args.dataset == "RW":
-    NUM_SENSORS = 2                      # HARD-CODED HERE (pretraining decides): 2 = chest + forearm (18 ch), 3 = chest + forearm + upper arm (27 ch). Downstream reads it from the checkpoint.
+    NUM_SENSORS = 1                      # HARD-CODED HERE (pretraining decides): 2 = chest + forearm (18 ch), 3 = chest + forearm + upper arm (27 ch). Downstream reads it from the checkpoint.
     if args.fold in range(1, 16):
         training_files, validation_files, test_files = data_split_REALWORLD(args.fold, num_sensors = NUM_SENSORS)
     else:
@@ -159,10 +159,12 @@ for seed in [42, 58, 7, 128, 92]:
     model = MambaJEPA(config, mask_ratio = 0.33, t_l = 3, num_heads = num_heads, use_pe = False, drop = True, recon = recon)
     model.to(device, non_blocking = True)
     # ----------------------
-    num_epochs = 35
+    if args.dataset in ("PAM", "OPP"):      # small datasets: val loss flat by ~1300 steps (ep ~30 PAM / ~25 OPP) -> L16-PAM / L24-OPP protocol (2026-09-13, Katy)
+        num_epochs, patience = 35, 8
+    else:                                   # RD, RW: val loss still improving at ep 40, converges ~50-55 (2026-09-11)
+        num_epochs, patience = 60, 12
     warmup_Epochs = 5
     lr = 0.0006
-    patience = 8
     criterion = nn.SmoothL1Loss()
     trainable_params = [p for p in model.parameters() if p.requires_grad]   # excludes frozen target encoder
     decay, no_decay = [], []

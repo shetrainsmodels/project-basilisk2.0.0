@@ -203,6 +203,9 @@ for seed in [42, 58, 7, 128, 92]:
 
     #  ----------- TRAINING -----------
     model_name = f"JEPA_models_pt/{RUN}/JEPA_model_{args.dataset}_fold{args.fold}_seed{seed}.pt"
+    if os.path.exists(model_name):   # the encoder is saved only once, after a seed finishes -> a file means the seed is complete
+        print(f"seed {seed}: encoder exists ({model_name}), skipping (resume after Slurm requeue/preemption, 2026-09-14)")
+        continue
     epoch_history = []
     best_val_loss = float("inf")
     best_epoch = None
